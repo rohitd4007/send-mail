@@ -1,24 +1,24 @@
 const express = require('express');
 const nodemailer = require('nodemailer');
-const bodyParser = require('body-parser');
 require('dotenv').config();
 const cors = require('cors');
+const app = express();
 
-// const corsOptions = {
-//     origin: '*',
-//     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-//     allowedHeaders: 'Content-Type,Authorization',
-// };
+// Set up CORS options
 const corsOptions = {
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type'],
+    origin: 'https://rohit-devhare-portfolio.netlify.app', // Allow only your frontend origin
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    allowedHeaders: 'Content-Type,Authorization',
+    optionsSuccessStatus: 200 // Some legacy browsers choke on 204
 };
 
-const app = express();
+// Apply CORS middleware
 app.use(cors(corsOptions));
-app.use(bodyParser.json());
 
+// Middleware to parse JSON bodies
+app.use(express.json());
+
+// Nodemailer setup
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 587,
@@ -30,15 +30,15 @@ const transporter = nodemailer.createTransport({
     family: 4,
 });
 
-
-
+// Test route
 app.get('/api', (req, res) => {
     res.json({ message: 'Hello from Vercel!' });
 });
 
+// Mail sending route
 app.post('/api/send-mail', (req, res) => {
     const { firstName, lastName, email, message } = req.body;
-    console.log('called updated')
+
     if (!firstName || !lastName || !email) {
         return res.status(400).send('All fields are required');
     }
@@ -47,7 +47,7 @@ app.post('/api/send-mail', (req, res) => {
         from: process.env.EMAIL_USER,
         to: email,
         subject: 'New User Visited',
-        text: `You have a new contact submission:\n\nFirst Name: ${firstName}\nLast Name: ${lastName}\nEmail: ${email}\nMessage : ${message}`,
+        text: `You have a new contact submission:\n\nFirst Name: ${firstName}\nLast Name: ${lastName}\nEmail: ${email}\nMessage: ${message}`,
     };
 
     transporter.sendMail(mailOptions, (error, info) => {
@@ -55,9 +55,11 @@ app.post('/api/send-mail', (req, res) => {
             console.log(error);
             return res.status(500).send('Error sending email');
         }
-        console.log('Email sent: ' + info.response);
         res.status(200).send('Email sent successfully');
     });
 });
 
-module.exports = app; // Export the app for Vercel to use
+// Handle preflight requests
+app.options('/api/send-mail', cors(corsOptions));
+
+module.exports = app;
