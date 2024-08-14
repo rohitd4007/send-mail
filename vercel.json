@@ -6,8 +6,6 @@
             "use": "@vercel/node"
         }
     ],
-    "src": "/api/(.*)",
-    "dest": "/api/index.js",
     "methods": [
         "GET",
         "POST",
