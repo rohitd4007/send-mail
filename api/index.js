@@ -38,7 +38,7 @@ app.get('/api', (req, res) => {
 
 app.post('/api/send-mail', (req, res) => {
     const { firstName, lastName, email, message } = req.body;
-
+    console.log('called updated')
     if (!firstName || !lastName || !email) {
         return res.status(400).send('All fields are required');
     }
