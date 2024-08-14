@@ -46,8 +46,20 @@ app.post('/api/send-mail', (req, res) => {
     const mailOptions = {
         from: process.env.EMAIL_USER,
         to: email,
-        subject: 'New User Visited',
-        text: `You have a new contact submission:\n\nFirst Name: ${firstName}\nLast Name: ${lastName}\nEmail: ${email}\nMessage: ${message}`,
+        subject: "Thank You for Reaching Out! Let's Stay Connected",
+        text: `
+            \nDear ${firstName},
+
+            \nI hope this message finds you well!
+
+            \nFeel free to check out my GitHub repository for a closer look at my work: [GitHub Link]. You’ll find some of my recent projects, showcasing my skills in action.
+
+            \nLooking forward to connecting with you!
+
+            \nBest regards,
+            
+            \nRohit
+        `,
     };
 
     transporter.sendMail(mailOptions, (error, info) => {
