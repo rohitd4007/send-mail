@@ -5,14 +5,13 @@ require('dotenv').config();
 const cors = require('cors');
 
 const corsOptions = {
-    origin: '*',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    allowedHeaders: 'Content-Type,Authorization',
+    origin: 'https://rohit-devhare-portfolio.netlify.app',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type'],
 };
 
 const app = express();
-// app.use(cors(corsOptions));
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
 const transporter = nodemailer.createTransport({
