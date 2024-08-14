@@ -4,8 +4,13 @@ const bodyParser = require('body-parser');
 require('dotenv').config();
 const cors = require('cors');
 
+// const corsOptions = {
+//     origin: '*',
+//     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+//     allowedHeaders: 'Content-Type,Authorization',
+// };
 const corsOptions = {
-    origin: 'https://rohit-devhare-portfolio.netlify.app',
+    origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type'],
 };
