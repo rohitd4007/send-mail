@@ -1,19 +1,17 @@
 const express = require('express');
 const nodemailer = require('nodemailer');
 const bodyParser = require('body-parser');
-require('dotenv').config(); // If you use environment variables
+require('dotenv').config();
 const cors = require('cors');
+
 const corsOptions = {
-    origin: '*', // Allow all origins; restrict this in production
+    origin: '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     allowedHeaders: 'Content-Type,Authorization',
 };
+
 const app = express();
 app.use(cors(corsOptions));
-
-
-const port = process.env.PORT || 8080;
-
 app.use(bodyParser.json());
 
 const transporter = nodemailer.createTransport({
@@ -51,6 +49,4 @@ app.post('/send-mail', (req, res) => {
     });
 });
 
-app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-});
+module.exports = app; // Export the app for Vercel to use
