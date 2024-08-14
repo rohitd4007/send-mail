@@ -52,12 +52,14 @@ app.post('/api/send-mail', (req, res) => {
 
             \nI hope this message finds you well!
 
-            \nFeel free to check out my GitHub repository for a closer look at my work: [GitHub Link]. You’ll find some of my recent projects, showcasing my skills in action.
+            \nFeel free to check out my GitHub repository for a closer look at my work: https://github.com/rohitd4007. 
+            
+            \nYou’ll find some of my recent projects, showcasing my skills in action.
 
             \nLooking forward to connecting with you!
 
             \nBest regards,
-            
+
             \nRohit
         `,
     };
