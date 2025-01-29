@@ -37,10 +37,17 @@ app.get('/api', (req, res) => {
 
 // Mail sending route
 app.post('/api/send-mail', (req, res) => {
-    const { firstName, lastName, email, message } = req.body;
+    const { firstName, lastName, email, message, isOtp, otp } = req.body;
 
-    if (!firstName || !lastName || !email) {
-        return res.status(400).send('All fields are required');
+    // Different validation based on isOtp flag
+    if (isOtp) {
+        if (!email) {
+            return res.status(400).send('Email is required for OTP');
+        }
+    } else {
+        if (!firstName || !lastName || !email) {
+            return res.status(400).send('All fields are required');
+        }
     }
 
     const mailOptions = {
@@ -64,7 +71,21 @@ app.post('/api/send-mail', (req, res) => {
         `,
     };
 
-    transporter.sendMail(mailOptions, (error, info) => {
+    const mailOptionsOTP = {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: "One Time Password to Change Your Account Password",
+        text: `
+            \nDear ${firstName},
+
+            \n OTP : ${otp}
+        `,
+    };
+
+    // Choose mail options based on isOtp flag
+    const mailOptionsToSend = isOtp ? mailOptionsOTP : mailOptions;
+
+    transporter.sendMail(mailOptionsToSend, (error, info) => {
         if (error) {
             console.log(error);
             return res.status(500).send('Error sending email');
