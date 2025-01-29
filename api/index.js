@@ -72,13 +72,12 @@ app.post('/api/send-mail', (req, res) => {
     };
 
     const mailOptionsOTP = {
-        from: process.env.EMAIL_USER,
+        // from: process.env.EMAIL_USER,
+        from: '"Team TeeFlect" <' + process.env.EMAIL_USER + '>',
         to: email,
         subject: "One Time Password to Change Your Account Password",
         text: `
-            \nDear ${firstName},
-
-            \n OTP : ${otp}
+            \n **OTP : ${otp}**
         `,
     };
 
