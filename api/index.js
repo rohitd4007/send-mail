@@ -7,7 +7,11 @@ const app = express();
 
 // Set up CORS options
 const corsOptions = {
-    origin: 'https://rohit-devhare-portfolio.netlify.app', // Allow only your frontend origin
+    origin: [
+        'https://rohit-devhare-portfolio.netlify.app',
+        'https://cool-sarees.netlify.app',
+        'http://localhost:3000'
+    ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     allowedHeaders: 'Content-Type,Authorization',
     optionsSuccessStatus: 200 // Some legacy browsers choke on 204
