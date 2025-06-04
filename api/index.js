@@ -16,13 +16,14 @@ function generateOTP() {
 function storeOTP(email, otp) {
     otpStore.set(email, {
         otp,
-        expiresAt: Date.now() + 15000 // 15 seconds
+        expiresAt: Date.now() + 30000 // 30 seconds
     });
 }
 
 // Function to validate OTP
 function validateOTP(email, otp) {
     const storedData = otpStore.get(email);
+    // console.log(email, otp, storedData, storedData.otp);
     if (!storedData) return false;
     if (Date.now() > storedData.expiresAt) {
         otpStore.delete(email);
@@ -64,26 +65,40 @@ app.get('/api', (req, res) => {
 
 // Mail sending route
 app.post('/api/send-mail', (req, res) => {
-    const { firstName, lastName, email, mailsubject, mailBody } = req.body;
+    console.log('Received request body:', req.body);
+
+    // Normalize field names to lowercase
+    const normalizedBody = {
+        firstname: req.body.firstName || req.body.firstname,
+        lastname: req.body.lastName || req.body.lastname,
+        email: req.body.email,
+        mailsubject: req.body.mailSubject || req.body.mailsubject,
+        mailbody: req.body.mailBody || req.body.mailbody
+    };
+
+    console.log('Normalized body:', normalizedBody);
 
     // Validate required fields
-    if (!firstName || !lastName || !email || !mailsubject || !mailBody) {
+    if (!normalizedBody.firstname || !normalizedBody.lastname || !normalizedBody.email ||
+        !normalizedBody.mailsubject || !normalizedBody.mailbody) {
         return res.status(400).json({
             error: 'Missing required fields',
-            required: ['firstName', 'lastName', 'email', 'mailsubject', 'mailBody']
+            required: ['firstName', 'lastName', 'email', 'mailSubject', 'mailBody'],
+            received: req.body,
+            normalized: normalizedBody
         });
     }
 
     const mailOptions = {
         from: process.env.EMAIL_USER,
-        to: email,
-        subject: mailsubject,
-        text: mailBody.split('\n').map(line => `\n${line}`).join(''),
+        to: normalizedBody.email,
+        subject: normalizedBody.mailsubject,
+        text: normalizedBody.mailbody.split('\n').map(line => `\n${line}`).join(''),
     };
 
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
-            console.log(error);
+            console.log('Mail error:', error);
             return res.status(500).json({ error: 'Error sending email', details: error.message });
         }
         res.status(200).json({ message: 'Email sent successfully' });
@@ -143,4 +158,5 @@ app.post('/api/verify-otp', (req, res) => {
 // Handle preflight requests
 app.options('/api/send-mail', cors(corsOptions));
 
+// Export the app for server.js to use
 module.exports = app;
