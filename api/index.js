@@ -6,15 +6,22 @@ const { sendMail } = require('./Controller/sendmailController');
 const app = express();
 
 // Set up CORS options
+const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : 'http://localhost:3000';
+
 const corsOptions = {
-    origin: [
-        'https://rohit-devhare-portfolio.netlify.app',
-        'https://cool-sarees.netlify.app',
-        'http://localhost:3000'
-    ],
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     allowedHeaders: 'Content-Type,Authorization',
-    optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+    optionsSuccessStatus: 200
 };
 
 // Apply CORS middleware
