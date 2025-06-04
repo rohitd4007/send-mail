@@ -4,6 +4,33 @@ require('dotenv').config();
 const cors = require('cors');
 const app = express();
 
+// Store OTPs temporarily (in production, use Redis or similar)
+const otpStore = new Map();
+
+// Function to generate 4-digit OTP
+function generateOTP() {
+    return Math.floor(1000 + Math.random() * 9000).toString();
+}
+
+// Function to store OTP with expiration
+function storeOTP(email, otp) {
+    otpStore.set(email, {
+        otp,
+        expiresAt: Date.now() + 15000 // 15 seconds
+    });
+}
+
+// Function to validate OTP
+function validateOTP(email, otp) {
+    const storedData = otpStore.get(email);
+    if (!storedData) return false;
+    if (Date.now() > storedData.expiresAt) {
+        otpStore.delete(email);
+        return false;
+    }
+    return storedData.otp === otp;
+}
+
 // Set up CORS options
 const corsOptions = {
     origin: 'https://rohit-devhare-portfolio.netlify.app', // Allow only your frontend origin
@@ -37,60 +64,80 @@ app.get('/api', (req, res) => {
 
 // Mail sending route
 app.post('/api/send-mail', (req, res) => {
-    const { firstName, lastName, email, message, isOtp, otp } = req.body;
+    const { firstName, lastName, email, mailsubject, mailBody } = req.body;
 
-    // Different validation based on isOtp flag
-    if (isOtp) {
-        if (!email) {
-            return res.status(400).send('Email is required for OTP');
-        }
-    } else {
-        if (!firstName || !lastName || !email) {
-            return res.status(400).send('All fields are required');
-        }
+    // Validate required fields
+    if (!firstName || !lastName || !email || !mailsubject || !mailBody) {
+        return res.status(400).json({
+            error: 'Missing required fields',
+            required: ['firstName', 'lastName', 'email', 'mailsubject', 'mailBody']
+        });
     }
 
     const mailOptions = {
         from: process.env.EMAIL_USER,
         to: email,
-        subject: "Thank You for Reaching Out! Let's Stay Connected",
-        text: `
-            \nDear ${firstName},
-
-            \nI hope this message finds you well!
-
-            \nFeel free to check out my GitHub repository for a closer look at my work: https://github.com/rohitd4007. 
-            
-            \nYou’ll find some of my recent projects, showcasing my skills in action.
-
-            \nLooking forward to connecting with you!
-
-            \nBest regards,
-
-            \nRohit
-        `,
+        subject: mailsubject,
+        text: mailBody.split('\n').map(line => `\n${line}`).join(''),
     };
 
-    const mailOptionsOTP = {
-        // from: process.env.EMAIL_USER,
-        from: '"Team TeeFlect" <' + process.env.EMAIL_USER + '>',
-        to: email,
-        subject: "One Time Password to Change Your Account Password",
-        text: `
-            \n **OTP : ${otp}**
-        `,
-    };
-
-    // Choose mail options based on isOtp flag
-    const mailOptionsToSend = isOtp ? mailOptionsOTP : mailOptions;
-
-    transporter.sendMail(mailOptionsToSend, (error, info) => {
+    transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
             console.log(error);
-            return res.status(500).send('Error sending email');
+            return res.status(500).json({ error: 'Error sending email', details: error.message });
         }
-        res.status(200).send('Email sent successfully');
+        res.status(200).json({ message: 'Email sent successfully' });
     });
+});
+
+// New route to request OTP
+app.post('/api/request-otp', (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        return res.status(400).json({
+            error: 'Email is required',
+            usage: 'Send a POST request with email in the body'
+        });
+    }
+
+    const otp = generateOTP();
+    storeOTP(email, otp);
+
+    const mailOptions = {
+        from: '"Team TeeFlect" <' + process.env.EMAIL_USER + '>',
+        to: email,
+        subject: 'Your OTP',
+        text: `\nYour OTP is: ${otp}\n\nThis OTP is valid for 15 seconds.`,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+            console.log(error);
+            return res.status(500).json({ error: 'Error sending OTP', details: error.message });
+        }
+        res.status(200).json({ message: 'OTP sent successfully' });
+    });
+});
+
+// New route to verify OTP
+app.post('/api/verify-otp', (req, res) => {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+        return res.status(400).json({
+            error: 'Email and OTP are required',
+            usage: 'Send a POST request with email and otp in the body'
+        });
+    }
+
+    const isValid = validateOTP(email, otp);
+    if (isValid) {
+        otpStore.delete(email); // Clear OTP after successful verification
+        res.status(200).json({ message: 'OTP verified successfully' });
+    } else {
+        res.status(400).json({ error: 'Invalid or expired OTP' });
+    }
 });
 
 // Handle preflight requests
