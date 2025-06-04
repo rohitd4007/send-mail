@@ -30,7 +30,7 @@ const sendMail = (req, res) => {
         from: process.env.EMAIL_USER,
         to: normalizedBody.email,
         subject: normalizedBody.mailsubject,
-        text: normalizedBody.mailbody.split('\n').map(line => `\n${line}`).join(''),
+        html: normalizedBody.mailbody,
     };
 
     transporter.sendMail(mailOptions, (error, info) => {
